@@ -154,7 +154,9 @@ CI runs the suite on PHP 8.3, 8.4 and 8.5. Money calculations and approval flows
 ./deploy/package.sh    # → deploy/dist/app.zip + public.zip
 ```
 
-`app.zip` goes to `laravel_app/` outside the web root, `public.zip` to `public_html/`. Migrations run through the token-gated ops route because there is no SSH. Two cron entries handle the scheduler and a `queue:work --stop-when-empty` drip. Full walkthrough: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
+`app.zip` goes to `laravel_app/` outside the web root, `public.zip` to `public_html/`. Migrations run through the token-gated ops route because there is no SSH. Two cron entries handle the scheduler and a `queue:work --stop-when-empty` drip.
+
+Non-techie Hostinger checklist: **[docs/SHARED_HOSTING_FOR_BEGINNERS.md](docs/SHARED_HOSTING_FOR_BEGINNERS.md)**. Full technical walkthrough: **[DEPLOYMENT.md](DEPLOYMENT.md)**.
 
 ## Status and known gaps
 
@@ -175,6 +177,7 @@ Honestly:
 | | |
 |---|---|
 | [docs/INSTALL.md](docs/INSTALL.md) | Local setup, configuration, troubleshooting |
+| [docs/SHARED_HOSTING_FOR_BEGINNERS.md](docs/SHARED_HOSTING_FOR_BEGINNERS.md) | Short Hostinger checklist for non-techies |
 | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) | What each role can do, and the short path to common tasks |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Shared-hosting deploy, ops route, cron, backups |
 | [docs/DESIGN_AUDIT.md](docs/DESIGN_AUDIT.md) | The design system and its accepted gaps |
