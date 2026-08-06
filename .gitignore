@@ -30,6 +30,7 @@
 /vendor
 /deploy/dist
 /dist
+/docs/videos/*-build/
 _ide_helper.php
 Homestead.json
 Homestead.yaml

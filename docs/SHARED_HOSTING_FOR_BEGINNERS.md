@@ -2,6 +2,8 @@
 
 Plain English. Tick boxes as you go.
 
+**Watch first (≈2.5 min):** [portfolio-os-shared-hosting-beginners.mp4](videos/portfolio-os-shared-hosting-beginners.mp4) — narrated walkthrough of this checklist.
+
 **Honest start:** you will need **one tech-friendly friend for about an hour** (Part A). They prepare the upload files on a normal computer. **You** do Hostinger (Part B) and day-to-day use (Part C).
 
 You need a Hostinger (or similar) account with **PHP 8.3+**, **MySQL**, **FTP**, and **cron**. No Redis. No “Node on the server.”
