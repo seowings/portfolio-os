@@ -1,8 +1,8 @@
 # Portfolio OS
 
-**Run a portfolio of websites without a spreadsheet, a shared password file, and a monthly argument about who is owed what.**
+**You run a bunch of websites with partners. Right now that probably means spreadsheets, a shared password doc, and a monthly “who is owed what?” argument.**
 
-Projects, an encrypted credential vault, the content work that keeps sites alive, the people doing it, and the money in and out — one app, on PHP and MySQL shared hosting.
+Portfolio OS puts the sites, the passwords, the work, the people, and the money in one place — and it runs on plain PHP + MySQL shared hosting (the cheap kind with FTP and cron).
 
 [![CI](https://github.com/tnandla/portfolio-os/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tnandla/portfolio-os/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -12,7 +12,11 @@ Projects, an encrypted credential vault, the content work that keeps sites alive
 
 ![Dashboard](docs/screenshots/dashboard.png)
 
+**Clone it. Seed it. Click around for five minutes.** If it clicks, you already know if it fits your partnership.
+
 ## Try it in two minutes
+
+You need PHP 8.3+, Composer, and Node (only to build CSS/JS on your laptop — nothing Node runs on the server).
 
 ```bash
 git clone https://github.com/tnandla/portfolio-os.git && cd portfolio-os
@@ -22,31 +26,72 @@ npm install && npm run build
 php artisan serve
 ```
 
-Open <http://127.0.0.1:8000> and sign in as `admin@example.com` / `password`. The seed also creates `partner@`, `supervisor@`, `staff@` and `accountant@example.com` with the same password — worth trying, because the app changes shape a lot depending on who is signed in.
+Open <http://127.0.0.1:8000> and sign in:
 
-**Full setup, MySQL, configuration and troubleshooting: [docs/INSTALL.md](docs/INSTALL.md).**
+| Account | Password | What you’ll see |
+|---|---|---|
+| `admin@example.com` | `password` | Everything |
+| `partner@example.com` | `password` | Money + ownership view |
+| `supervisor@example.com` | `password` | Approvals + team work |
+| `staff@example.com` | `password` | Assigned work only |
+| `accountant@example.com` | `password` | Revenue, expenses, P&L |
 
-## What it does
+Switch accounts once. The app changes shape a lot depending on who is signed in — that’s the point.
 
-### Stops credentials living in a shared file
-An encrypted vault per project — hosting, CMS, registrar, analytics, ad network. Secrets are encrypted with your app key and only decrypted when someone with permission asks. Every reveal is logged with who, when and from where. Expiring credentials warn you before the domain lapses.
+Stuck? Full setup, MySQL, config and troubleshooting: **[docs/INSTALL.md](docs/INSTALL.md)**.
 
-### Makes the money arguments unnecessary
-Ownership percentages per project, enforced to total exactly 100%. Revenue per month with each row freezing its own FX rate, so a rate change next year never rewrites last year. Shared costs allocated across projects in proportion to revenue. Every amount is stored as a whole number of minor units, so rounding never quietly loses a partner's share. Approving a distribution locks it permanently — corrections are new entries, never edits.
+---
 
-### Turns "did anyone do it?" into a queue
-Tasks with checklists and recurring templates, an article pipeline from brief to published, and a link-building log with per-project budgets. All three land in one keyboard-driven approval queue (`j`/`k` to move, `a` approve, `r` reject). Approving an article or link can raise the matching expense for you.
+## Features
 
-### Tracks people without a punch clock
-The first login of the day is the check-in, marked late after an hour you choose. Monthly scorecards total each person's tasks, articles and links, costed against their own pay rates — mixed salary and per-item rates are normal, not an edge case.
+### Projects & credentials
+- Portfolio of every site: status, monetisation, ownership, open work
+- Encrypted credential vault per project (hosting, CMS, registrar, ads, analytics…)
+- Secrets only decrypt when someone with permission asks — every reveal is logged
+- Expiry warnings before domains / certs / access lapse
 
-### Fits how partnerships actually work
-Roles are many-to-many, so one person can be a partner *and* a supervisor and gets the union of both. 49 permissions across five seeded roles. Project scoping is applied in the query, not hidden in the view, so a staff account cannot reach another project's data by changing an ID.
+### Work
+- Tasks with checklists, assignees, and recurring templates
+- Article pipeline from brief → draft → published (with cost)
+- Link-building log with per-project budgets
+- One approval queue for tasks, articles, and links (`j`/`k` move, `a` approve, `r` reject)
+- Approving an article or link can raise the matching expense for you
+- ⌘K command palette to jump or create from anywhere
 
-**Optional:** with an AI key configured you also get an "ask your data" box and drafted monthly summaries, behind a spend cap. Leave `AI_API_KEY` empty and the feature does not exist — no nav entry, no route, no outbound call. The app is complete without it.
+### People
+- Login counts as check-in (no separate punch clock)
+- Late after a grace window you choose
+- Monthly scorecards: tasks, articles, links — priced at each person’s rates
+- Mixed pay is normal: salary and/or per article / link / task
 
-<details>
-<summary><strong>Screenshots</strong> — portfolio, project detail, tasks, approvals, P&L, distributions, revenue, scorecards, palette, dark mode, mobile</summary>
+### Money
+- Revenue by month (manual or CSV), with FX frozen per row
+- Expenses and shared costs allocated across projects by revenue share
+- P&L that partners can actually read
+- Ownership **per project**, enforced to total **100%**
+- Partner distributions: preview → approve → **locked forever** (corrections are new entries)
+- Every amount stored as integer minor units — no float rounding surprises
+- Soft-delete only on financial records
+
+### Permissions that match real partnerships
+- Roles are many-to-many (partner *and* supervisor is fine — one merged UI, no role switcher)
+- 49 permissions across five seeded roles
+- Project access enforced in queries, not “hidden in the view”
+
+### Optional AI (off by default)
+- “Ask your data” box and drafted monthly summaries when `AI_API_KEY` is set
+- Credentials, passwords, and bank details never go to the model
+- No key → no nav, no route, no outbound call. The rest of the app is complete without it.
+
+### Built for shared hosting on purpose
+- PHP + MySQL only — no Redis, no Node on the server, no websockets, no Docker
+- Deploy with two zip files over FTP + two cron lines
+- Sessions, cache, and queues on database or files
+- Jobs safe to run late, out of order, or twice
+
+---
+
+## Screenshots
 
 |  |  |
 |---|---|
@@ -57,22 +102,22 @@ Roles are many-to-many, so one person can be a partner *and* a supervisor and ge
 | ![Command palette](docs/screenshots/command-palette.png) <br> **⌘K** — jump or create from anywhere. | ![Dark mode](docs/screenshots/dashboard-dark.png) <br> **Dark mode** — a full second token set, no flash. |
 | ![Articles](docs/screenshots/articles.png) <br> **Articles** — brief to published, with cost. | ![Attendance](docs/screenshots/attendance.png) <br> **Attendance** — derived from logins. |
 
-The full navigation on a phone, not a cut-down version:
+Mobile isn’t a cut-down app — same navigation:
 
 <img src="docs/screenshots/mobile-dashboard.png" alt="Mobile dashboard" width="320">
 
-</details>
+---
 
 ## Why shared hosting shaped this
 
 The whole app runs on PHP and MySQL: no Node runtime on the server, no Redis, no queue daemon, no websockets, no container. Deployment is two zip files over FTP and a cron entry.
 
-That is a constraint, and it made the app better in ways worth stealing:
+That constraint made a few good habits stick:
 
 - Sessions, cache and queues run on the database or filesystem. Nothing assumes Redis.
 - Every queued job is safe to run late, out of order, or twice — a cron drip does all three.
 - No reliance on `exec()`, `proc_open()` or `symlink()`. Backups are a pure-PHP SQL export.
-- Assets are built locally and uploaded. Fonts are self-hosted WOFF2, so there is no CDN in the runtime path.
+- Assets are built locally and uploaded. Fonts are self-hosted WOFF2 — no CDN in the runtime path.
 
 Deploy it to a normal VPS and none of this hurts you — you just have headroom you are not using.
 
@@ -97,7 +142,7 @@ No React, no Vue, no Inertia, no SPA.
 ## Tests
 
 ```bash
-php artisan test        # 97 tests, SQLite in-memory
+php artisan test        # 110 tests, SQLite in-memory
 vendor/bin/pint --test  # code style
 ```
 
@@ -123,6 +168,7 @@ Honestly:
 - Reports are tables. No charting library.
 - Wide financial tables scroll sideways on phones rather than reflowing into cards.
 - Editing happens in modals and side forms, not inline.
+- 2FA is scaffold only (see Security above).
 
 ## Docs
 
