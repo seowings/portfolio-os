@@ -10,17 +10,20 @@ define('LARAVEL_START', microtime(true));
 | Dual-path bootstrap (local vs Hostinger)
 |--------------------------------------------------------------------------
 |
-| Local layout:   app root/public/index.php → ../vendor, ../bootstrap
-| Hostinger:      public_html/index.php     → ../laravel_app/vendor, ../laravel_app/bootstrap
+| 1. Hostinger FTP jail: public_html/index.php + public_html/laravel_app/
+| 2. Ideal sibling:      public_html/index.php + ../laravel_app/
+| 3. Local:              public/index.php → app root/
 |
 | public_path() is always this directory so asset URLs and storage:link target
-| the web root (public_html on production).
+| the web root.
 |
 */
 
-$laravelRoot = is_dir(__DIR__.'/../laravel_app')
-    ? __DIR__.'/../laravel_app'
-    : __DIR__.'/..';
+$laravelRoot = is_dir(__DIR__.'/laravel_app')
+    ? __DIR__.'/laravel_app'
+    : (is_dir(__DIR__.'/../laravel_app')
+        ? __DIR__.'/../laravel_app'
+        : __DIR__.'/..');
 
 // Determine if the application is in maintenance mode...
 if (file_exists($maintenance = $laravelRoot.'/storage/framework/maintenance.php')) {

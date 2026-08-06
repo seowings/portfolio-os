@@ -102,50 +102,55 @@ trap 'cleanup_stage; restore_dev' EXIT
 step "Staging app tree → $STAGE/app"
 mkdir -p "$STAGE/app"
 
-# rsync if available; else tar pipe
+# rsync if available; else tar pipe.
+# Patterns are root-anchored on purpose: a bare "dist/" or "tests/" would also
+# strip vendor/livewire/livewire/dist (and any package tests), which breaks login
+# on the deployed site (Livewire JS 500 → silent Livewire form submit).
 if command -v rsync >/dev/null 2>&1; then
   rsync -a \
-    --exclude 'public/' \
-    --exclude 'node_modules/' \
-    --exclude '.git/' \
-    --exclude 'tests/' \
-    --exclude '.env' \
-    --exclude '.env.backup' \
-    --exclude '.env.production' \
-    --exclude 'deploy/dist/' \
-    --exclude 'dist/' \
-    --exclude 'storage/logs/*' \
-    --exclude 'storage/framework/cache/*' \
-    --exclude 'storage/framework/sessions/*' \
-    --exclude 'storage/framework/views/*' \
-    --exclude 'storage/framework/testing/*' \
-    --exclude 'storage/pail' \
-    --exclude '.phpunit.result.cache' \
-    --exclude 'phpunit.xml' \
-    --exclude 'database/*.sqlite' \
-    --exclude 'database/*.sqlite-journal' \
+    --exclude '/public/' \
+    --exclude '/node_modules/' \
+    --exclude '/.git/' \
+    --exclude '/tests/' \
+    --exclude '/.env' \
+    --exclude '/.env.backup' \
+    --exclude '/.env.production' \
+    --exclude '/deploy/dist/' \
+    --exclude '/dist/' \
+    --exclude '/docs/videos/*-build/' \
+    --exclude '/storage/logs/*' \
+    --exclude '/storage/framework/cache/*' \
+    --exclude '/storage/framework/sessions/*' \
+    --exclude '/storage/framework/views/*' \
+    --exclude '/storage/framework/testing/*' \
+    --exclude '/storage/pail' \
+    --exclude '/.phpunit.result.cache' \
+    --exclude '/phpunit.xml' \
+    --exclude '/database/*.sqlite' \
+    --exclude '/database/*.sqlite-journal' \
     "$ROOT/" "$STAGE/app/"
 else
-  # portable fallback
+  # Portable fallback. Anchor every pattern to ./ so tar does not match names
+  # deeper in vendor (same Livewire dist trap as the rsync path).
   tar -C "$ROOT" \
-    --exclude='public' \
-    --exclude='node_modules' \
-    --exclude='.git' \
-    --exclude='tests' \
-    --exclude='.env' \
-    --exclude='.env.backup' \
-    --exclude='.env.production' \
-    --exclude='deploy/dist' \
-    --exclude='dist' \
-    --exclude='storage/logs' \
-    --exclude='storage/framework/cache' \
-    --exclude='storage/framework/sessions' \
-    --exclude='storage/framework/views' \
-    --exclude='storage/framework/testing' \
-    --exclude='storage/pail' \
-    --exclude='.phpunit.result.cache' \
-    --exclude='phpunit.xml' \
-    --exclude='database/*.sqlite' \
+    --exclude='./public' \
+    --exclude='./node_modules' \
+    --exclude='./.git' \
+    --exclude='./tests' \
+    --exclude='./.env' \
+    --exclude='./.env.backup' \
+    --exclude='./.env.production' \
+    --exclude='./deploy/dist' \
+    --exclude='./dist' \
+    --exclude='./storage/logs' \
+    --exclude='./storage/framework/cache' \
+    --exclude='./storage/framework/sessions' \
+    --exclude='./storage/framework/views' \
+    --exclude='./storage/framework/testing' \
+    --exclude='./storage/pail' \
+    --exclude='./.phpunit.result.cache' \
+    --exclude='./phpunit.xml' \
+    --exclude='./database/*.sqlite' \
     -cf - . | tar -C "$STAGE/app" -xf -
 fi
 
