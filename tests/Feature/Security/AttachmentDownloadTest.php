@@ -105,6 +105,52 @@ it('gates an expense receipt behind expense viewing permission', function () {
     $this->actingAs($staff)->get(route('expenses.receipt', $expense))->assertForbidden();
 });
 
+it('refuses a receipt when the partner cannot access that expense project', function () {
+    $admin = SecurityHelpers::user('admin');
+    $partner = SecurityHelpers::user('partner');
+
+    // Partner owns Alpha only; Beta is entirely the admin's.
+    $alpha = SecurityHelpers::project($partner, ['domain' => 'receipt-alpha.test']);
+    $beta = SecurityHelpers::project($admin, ['domain' => 'receipt-beta.test']);
+
+    $betaPath = UploadedFile::fake()
+        ->createWithContent('beta-receipt.pdf', 'beta secret invoice')
+        ->store('expense-receipts', 'local');
+
+    $betaExpense = Expense::query()->create([
+        'project_id' => $beta->id,
+        'description' => 'Beta hosting',
+        'amount_paisa' => 9_000_00,
+        'expense_date' => now()->toDateString(),
+        'is_shared' => false,
+        'is_paid' => true,
+        'receipt_path' => $betaPath,
+        'receipt_original_name' => 'beta-receipt.pdf',
+        'created_by' => $admin->id,
+    ]);
+
+    $alphaPath = UploadedFile::fake()
+        ->createWithContent('alpha-receipt.pdf', 'alpha invoice')
+        ->store('expense-receipts', 'local');
+
+    $alphaExpense = Expense::query()->create([
+        'project_id' => $alpha->id,
+        'description' => 'Alpha hosting',
+        'amount_paisa' => 3_000_00,
+        'expense_date' => now()->toDateString(),
+        'is_shared' => false,
+        'is_paid' => true,
+        'receipt_path' => $alphaPath,
+        'receipt_original_name' => 'alpha-receipt.pdf',
+        'created_by' => $admin->id,
+    ]);
+
+    // Partner has expenses.view, so the global permission check alone is not enough —
+    // project scoping must still forbid Beta's receipt while allowing Alpha's.
+    $this->actingAs($partner)->get(route('expenses.receipt', $betaExpense))->assertForbidden();
+    $this->actingAs($partner)->get(route('expenses.receipt', $alphaExpense))->assertOk();
+});
+
 it('404s a receipt route for an expense with no receipt', function () {
     $admin = SecurityHelpers::user('admin');
     $project = SecurityHelpers::project($admin, ['domain' => 'no-receipt.test']);

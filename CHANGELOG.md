@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- **Expense receipt downloads are project-scoped.** The route previously only
+  checked `expenses.view` / `expenses.manage` globally, so a partner with view
+  permission but no access to Project B could still download B’s receipt by
+  requesting `/money/expenses/{id}/receipt` directly. Access now uses the same
+  `Expense::accessibleBy()` scope as the expenses list, P&L and AI expense
+  spikes report. Reported by Muneeb.
+
 ## [1.0.1]
 
 A security and performance pass over the whole app ahead of announcing it publicly.

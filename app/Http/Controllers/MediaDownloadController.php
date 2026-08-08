@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Expense;
 use App\Models\Media;
-use App\Policies\FinancePolicy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +35,10 @@ class MediaDownloadController extends Controller
 
     public function receipt(Request $request, Expense $expense): StreamedResponse
     {
-        if (! FinancePolicy::viewExpenses($request->user())) {
+        // Permission alone is not enough: partners hold expenses.view but must
+        // only reach expenses for projects they can access (or shared costs).
+        // Matches Expense::scopeAccessibleBy used by lists, P&L and AI reports.
+        if (! Expense::query()->accessibleBy($request->user())->whereKey($expense->id)->exists()) {
             throw new AccessDeniedHttpException;
         }
 
