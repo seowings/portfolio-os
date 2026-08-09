@@ -26,6 +26,7 @@ class Article extends Model
         'meta_description',
         'published_url',
         'publish_date',
+        'updated_date',
         'revision_notes',
         'created_by',
         'approved_by',
@@ -42,6 +43,7 @@ class Article extends Model
             'word_count_actual' => 'integer',
             'cost_paisa' => 'integer',
             'publish_date' => 'date',
+            'updated_date' => 'date',
             'submitted_at' => 'datetime',
             'approved_at' => 'datetime',
         ];

@@ -61,4 +61,9 @@ class ArticlePolicy
 
         return $user->hasPermission('articles.update') && (int) $article->writer_id === (int) $user->id;
     }
+
+    public function delete(User $user, Article $article): bool
+    {
+        return $user->isAdmin();
+    }
 }

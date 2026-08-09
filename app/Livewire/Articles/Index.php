@@ -9,12 +9,14 @@ use App\Models\User;
 use App\Services\ArticleWorkflowService;
 use App\Support\Money;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 
 #[Layout('layouts.app')]
@@ -22,6 +24,7 @@ use Livewire\WithPagination;
 class Index extends Component
 {
     use AuthorizesRequests;
+    use WithFileUploads;
     use WithPagination;
 
     #[Url]
@@ -34,6 +37,14 @@ class Index extends Component
     public string $projectFilter = '';
 
     public bool $showForm = false;
+
+    public bool $showImport = false;
+
+    public $importFile;
+
+    public bool $showDelete = false;
+
+    public ?int $deletingId = null;
 
     public bool $showMore = false;
 
@@ -60,6 +71,8 @@ class Index extends Component
     public string $published_url = '';
 
     public string $publish_date = '';
+
+    public string $updated_date = '';
 
     public string $revision_notes = '';
 
@@ -108,6 +121,7 @@ class Index extends Component
         $this->meta_description = (string) $article->meta_description;
         $this->published_url = (string) $article->published_url;
         $this->publish_date = $article->publish_date?->format('Y-m-d') ?? '';
+        $this->updated_date = $article->updated_date?->format('Y-m-d') ?? '';
         $this->showForm = true;
         $this->showMore = filled($article->meta_title) || filled($article->published_url);
     }
@@ -133,6 +147,7 @@ class Index extends Component
             'meta_description' => ['nullable', 'string', 'max:1000'],
             'published_url' => ['nullable', 'string', 'max:2048'],
             'publish_date' => ['nullable', 'date'],
+            'updated_date' => ['nullable', 'date'],
         ]);
 
         $project = Project::query()->findOrFail($validated['project_id']);
@@ -152,6 +167,7 @@ class Index extends Component
             'meta_description' => $validated['meta_description'] ?: null,
             'published_url' => $validated['published_url'] ?: null,
             'publish_date' => $validated['publish_date'] ?: null,
+            'updated_date' => $validated['updated_date'] ?: null,
         ];
 
         try {
@@ -174,6 +190,41 @@ class Index extends Component
         $this->showForm = false;
         $this->resetForm();
         $this->dispatch('toast', message: 'Article saved.', tone: 'success');
+    }
+
+    public function openImport(): void
+    {
+        $this->authorize('create', Article::class);
+        $this->showImport = true;
+    }
+
+    public function cancelImport(): void
+    {
+        $this->showImport = false;
+        $this->importFile = null;
+    }
+
+    public function importCsv(): void
+    {
+        $this->authorize('create', Article::class);
+
+        $this->validate([
+            'importFile' => 'required|file|max:5120', // 5MB max
+        ]);
+
+        $filePath = $this->importFile->getRealPath();
+
+        $exitCode = Artisan::call('import:articles', [
+            'file' => $filePath,
+        ]);
+
+        if ($exitCode === 0) {
+            $this->dispatch('toast', message: 'Articles imported successfully.', tone: 'success');
+            $this->showImport = false;
+            $this->importFile = null;
+        } else {
+            $this->dispatch('toast', message: 'Import failed. '.Artisan::output(), tone: 'danger');
+        }
     }
 
     public function submitDraft(int $id, ArticleWorkflowService $workflow): void
@@ -230,6 +281,34 @@ class Index extends Component
         }
     }
 
+    public function confirmDelete(int $id): void
+    {
+        $article = Article::query()->findOrFail($id);
+        $this->authorize('delete', $article);
+        $this->deletingId = $id;
+        $this->showDelete = true;
+    }
+
+    public function cancelDelete(): void
+    {
+        $this->showDelete = false;
+        $this->deletingId = null;
+    }
+
+    public function delete(): void
+    {
+        if (! $this->deletingId) {
+            return;
+        }
+        $article = Article::query()->findOrFail($this->deletingId);
+        $this->authorize('delete', $article);
+        $article->delete();
+
+        $this->dispatch('toast', message: 'Article deleted successfully.', tone: 'success');
+        $this->showDelete = false;
+        $this->deletingId = null;
+    }
+
     public function cancel(): void
     {
         $this->showForm = false;
@@ -251,6 +330,7 @@ class Index extends Component
         $this->meta_description = '';
         $this->published_url = '';
         $this->publish_date = '';
+        $this->updated_date = '';
         $this->showMore = false;
         $this->resetValidation();
     }

@@ -6,6 +6,7 @@
     >
         @if ($canCreate)
             <x-slot:actions>
+                <x-button variant="secondary" icon="arrow-up" wire:click="openImport">Bulk import</x-button>
                 <x-button icon="plus" wire:click="create">New article</x-button>
             </x-slot:actions>
         @endif
@@ -59,6 +60,7 @@
                 'Status',
                 ['label' => 'Words', 'align' => 'right'],
                 ['label' => \App\Support\Currency::code(), 'align' => 'right'],
+                ['label' => 'Updated', 'align' => 'right'],
                 ['label' => 'Actions', 'sr' => true, 'align' => 'right', 'width' => 'relative'],
             ]">
                 @foreach ($articles as $article)
@@ -100,11 +102,19 @@
                         <x-table.cell numeric>
                             <x-money :paisa="$article->cost_paisa" />
                         </x-table.cell>
+                        <x-table.cell numeric muted nowrap>
+                            {{ $article->updated_date?->format('M j, Y') ?? '—' }}
+                        </x-table.cell>
                         <x-table.cell align="right" nowrap>
                             <div class="flex items-center justify-end gap-1">
                                 @can('update', $article)
                                     <x-tooltip text="Edit article">
                                         <x-button size="sm" variant="ghost" square icon="pencil" wire:click="edit({{ $article->id }})" aria-label="Edit {{ $article->title }}" />
+                                    </x-tooltip>
+                                @endcan
+                                @can('delete', $article)
+                                    <x-tooltip text="Delete article">
+                                        <x-button size="sm" variant="danger-ghost" square icon="trash" wire:click="confirmDelete({{ $article->id }})" aria-label="Delete {{ $article->title }}" />
                                     </x-tooltip>
                                 @endcan
                                 @can('submit', $article)
@@ -189,6 +199,7 @@
                 <x-input label="Published URL" wire:model="published_url" :error="$errors->first('published_url')" />
                 <x-textarea label="Meta description" wire:model="meta_description" rows="2" :error="$errors->first('meta_description')" class="sm:col-span-2" />
                 <x-input label="Publish date" type="date" wire:model="publish_date" :error="$errors->first('publish_date')" />
+                <x-input label="Last updated" type="date" wire:model="updated_date" :error="$errors->first('updated_date')" />
             @endif
         </form>
 
@@ -211,6 +222,32 @@
         <x-slot:footer>
             <x-button variant="ghost" wire:click="cancel">Cancel</x-button>
             <x-button variant="danger" wire:click="requestRevision">Send</x-button>
+        </x-slot:footer>
+    </x-modal>
+
+    <x-modal :show="$showImport" title="Bulk import articles" subtitle="Upload a CSV file to import articles." close="cancelImport" size="sm">
+        <form id="import-form" wire:submit="importCsv">
+            <input type="file" wire:model="importFile" accept=".csv" required class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <div class="mt-4">
+                <a href="/articles_import_template.csv" download class="text-sm text-indigo-600 hover:underline">Download CSV template</a>
+            </div>
+            
+            <div wire:loading wire:target="importFile" class="mt-2 text-sm text-slate-500">
+                Uploading...
+            </div>
+            @error('importFile') <span class="mt-2 text-sm text-red-600">{{ $message }}</span> @enderror
+        </form>
+
+        <x-slot:footer>
+            <x-button variant="ghost" wire:click="cancelImport">Cancel</x-button>
+            <x-button type="submit" form="import-form" target="importCsv" wire:loading.attr="disabled">Import</x-button>
+        </x-slot:footer>
+    </x-modal>
+
+    <x-modal :show="$showDelete" title="Delete article" subtitle="Are you sure you want to delete this article? This action cannot be undone." close="cancelDelete" size="sm">
+        <x-slot:footer>
+            <x-button variant="ghost" wire:click="cancelDelete">Cancel</x-button>
+            <x-button variant="danger" wire:click="delete">Delete</x-button>
         </x-slot:footer>
     </x-modal>
 </div>
